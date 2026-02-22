@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:openai.com)",
+      "WebFetch(domain:ai.google.dev)",
+      "WebFetch(domain:platform.openai.com)",
+      "WebFetch(domain:pricepertoken.com)",
+      "WebFetch(domain:a16z.com)",
+      "WebFetch(domain:www.syntheticusers.com)",
+      "Bash(head:*)",
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:www.nature.com)",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:carnegieendowment.org)",
+      "WebFetch(domain:guide.data.gov.sg)",
+      "WebFetch(domain:www.onemap.gov.sg)",
+      "WebFetch(domain:tablebuilder.singstat.gov.sg)",
+      "WebFetch(domain:www.tablebuilder.singstat.gov.sg)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:singstat.readthedocs.io)",
+      "WebFetch(domain:datamall.lta.gov.sg)",
+      "WebFetch(domain:api-open.data.gov.sg)",
+      "WebFetch(domain:api.data.gov.sg)",
+      "WebFetch(domain:docs.onemap.sg)",
+      "WebFetch(domain:www.sheshbabu.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:towardsdatascience.com)",
+      "Bash(python3:*)",
+      "Bash(npm run:*)",
+      "Bash(pip install:*)",
+      "Bash(set -a && source .env && set +a && python3 scripts/prepare_area_profiles.py 2>&1)",
+      "Bash(npx shadcn@latest:*)"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "source_inputs": [
+    "https://huggingface.co/datasets/nvidia/Nemotron-Personas-Singapore/resolve/main/data/train-00000-of-00002.parquet",
+    "https://huggingface.co/datasets/nvidia/Nemotron-Personas-Singapore/resolve/main/data/train-00001-of-00002.parquet"
+  ],
+  "rows_before_cleaning": 148000,
+  "rows_after_cleaning": 148000,
+  "rows_exported": 5000,
+  "unique_planning_areas": 48,
+  "sample_size_target": 5000,
+  "seed": 42
+}

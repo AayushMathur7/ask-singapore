@@ -1,1 +1,73 @@
-# ask-singapore
+# Ask Singapore
+
+Single-page app for simple synthetic research:
+1) set lightweight cohort filters
+2) ask one question
+3) view score, sentiment split, and map by planning area
+
+## Stack
+
+- Next.js (App Router, TypeScript)
+- GPT-5, Gemini, and Claude model options for per-persona responses + scoring
+- Mapbox + Singapore planning-area GeoJSON
+- NVIDIA Nemotron-Personas-Singapore dataset (CC BY 4.0)
+
+## Environment Variables
+
+Copy `.env.example` to `.env.local` and set:
+
+- `GEMINI_API_KEY` (required for Gemini models)
+- `ANTHROPIC_API_KEY` (required for Claude models)
+- `OPENAI_API_KEY` (required for GPT models)
+- `NEXT_PUBLIC_MAPBOX_TOKEN`
+
+Model IDs are built into the app and selected in the UI; no model env variable is required.
+
+## Setup
+
+```bash
+npm install
+```
+
+Download/refresh Singapore subzone GeoJSON (already committed in `public/data`):
+
+```bash
+curl -sL "https://api-open.data.gov.sg/v1/public/api/datasets/d_8594ae9ff96d0c708bc2af633048edfb/poll-download"
+```
+
+Prepare compact persona data from parquet:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install polars
+.venv/bin/python scripts/prepare_personas.py --sample-size 5000 --seed 42
+```
+
+Run app:
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+## Quality Checks
+
+```bash
+npm run test
+npm run lint
+npm run typecheck
+npm run build
+```
+
+## Notes
+
+- Runtime data file: `public/data/personas.compact.v1.json` (~4.9 MB with 5,000 rows).
+- Model selector is loaded from `/api/options`; unavailable models are shown but disabled.
+- Default selected model is the cheapest available option from the built-in list.
+- Anthropic model calls use prompt caching (`cacheControl: { type: "ephemeral", ttl: "5m" }`).
+- Primary route: `src/app/api/ask/route.ts`
+- Cohort API routes: `src/app/api/cohort/create/route.ts`, `src/app/api/cohort/[cohortId]/route.ts`
+- Streaming chat route: `src/app/api/chat/route.ts`
+- Map UI: `src/components/ask-singapore-app.tsx`
+- Dataset attribution and disclaimer are rendered on the landing page.
