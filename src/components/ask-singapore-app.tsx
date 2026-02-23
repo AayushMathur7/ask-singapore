@@ -67,6 +67,10 @@ function sentimentPillClass(sentiment: "positive" | "neutral" | "negative"): str
   return "pill-neutral";
 }
 
+function formatConfidence(confidence: number): string {
+  return `${Math.round(confidence * 100)}%`;
+}
+
 function MultiSelectFilter(props: {
   label: string;
   value: string[];
@@ -343,11 +347,14 @@ export function AskSingaporeApp() {
           </CardHeader>
           <div
             className={cn(
-              "grid transition-[grid-template-rows] duration-200 ease-in-out",
-              filtersCollapsed ? "grid-rows-[0fr]" : "grid-rows-[1fr]",
+              "overflow-hidden transition-[max-height,opacity] duration-200 ease-in-out",
+              filtersCollapsed
+                ? "pointer-events-none max-h-0 opacity-0"
+                : "max-h-[40rem] opacity-100",
             )}
+            aria-hidden={filtersCollapsed}
           >
-            <CardContent className="overflow-hidden px-3 pt-0 pb-3">
+            <CardContent className="px-3 pt-0 pb-3">
               <div className="space-y-2">
                 <div className="grid grid-cols-3 gap-1.5">
                   <div className="space-y-1">
@@ -477,6 +484,9 @@ export function AskSingaporeApp() {
                           </p>
                           <span className={`shrink-0 rounded-full px-1.5 py-px text-[10px] ${sentimentPillClass(item.sentiment)}`}>
                             {item.sentiment}
+                          </span>
+                          <span className="shrink-0 rounded-full border border-border bg-background/60 px-1.5 py-px text-[10px] text-foreground/80">
+                            Confidence {formatConfidence(item.confidence)}
                           </span>
                         </div>
                         <p className="mt-1 text-xs leading-snug text-foreground">{item.answer}</p>

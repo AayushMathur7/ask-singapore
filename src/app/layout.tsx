@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./globals.css";
 
@@ -28,6 +29,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${interSans.variable} ${interDisplay.variable} antialiased`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );

@@ -20,6 +20,7 @@
     "@ai-sdk/openai": "^3.0.30",
     "@ai-sdk/react": "^3.0.99",
     "@types/geojson": "^7946.0.16",
+    "@vercel/analytics": "^1.6.1",
     "ai": "^6.0.97",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
