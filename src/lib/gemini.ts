@@ -101,9 +101,11 @@ export async function generatePersonaReply(params: {
           }
         : undefined;
 
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 7000);
+      const timeoutMs =
+        candidate.provider === "anthropic" ? 22000 : 10000;
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
       try {
         const result = await generateObject({
           model: modelHandle,
@@ -133,8 +135,9 @@ export async function generatePersonaReply(params: {
           `${candidate.id}#${attempt + 1}: ${message.replace(/\s+/g, " ").slice(0, 240)}`,
         );
         lastError = error instanceof Error ? error : new Error("Unknown model provider error.");
-        if (attempt === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 160));
+        if (attempt < 2) {
+          const delayMs = candidate.provider === "anthropic" ? 900 : 220;
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
       } finally {
         clearTimeout(timeout);

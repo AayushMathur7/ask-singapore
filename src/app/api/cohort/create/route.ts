@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       candidates,
       Math.min(filters.sample_size, candidates.length),
     );
-    const cohort = createCohort({
+    const cohort = await createCohort({
       filters,
       totalMatches: candidates.length,
       personas: cohortPersonas,

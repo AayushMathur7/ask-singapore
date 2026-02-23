@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "convex:dev": "convex dev",
+    "convex:deploy": "convex deploy",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -22,6 +24,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "convex": "^1.32.0",
     "lucide-react": "^0.575.0",
     "mapbox-gl": "^3.18.1",
     "next": "16.1.6",

@@ -5,19 +5,24 @@ import { getAreaProfileStore } from "@/lib/area-profiles";
 import { generatePersonaReply } from "@/lib/gemini";
 import {
   getAvailableModelOptions,
+  getModelOption,
   getDefaultModelId,
 } from "@/lib/model-catalog";
 import { getPersonaStore } from "@/lib/persona-store";
+import { persistAskResult } from "@/lib/ask-result-store";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { filterPersonas, sampleFromCandidates } from "@/lib/sampling";
 import { AskRequestSchema, AskResponseSchema } from "@/lib/schemas";
 import { aggregateSentiment } from "@/lib/sentiment";
 
-const workerLimit = pLimit(6);
 const MAX_DEBUG_FAILURES = 8;
 
 function isDebugEnabled(): boolean {
   return process.env.NODE_ENV === "development" || process.env.ASK_DEBUG === "1";
+}
+
+function minimumRequiredResponses(sampledCount: number): number {
+  return Math.max(3, Math.min(5, Math.ceil(sampledCount * 0.2)));
 }
 
 function summarizeFailureReasons(reasons: string[]): Array<{ reason: string; count: number }> {
@@ -87,6 +92,7 @@ export async function POST(request: NextRequest) {
     }
 
     const model = parsedBody.model ?? getDefaultModelId();
+    const selectedModelOption = getModelOption(model);
     const isModelAvailable = availableModels.some((option) => option.id === model);
     if (!isModelAvailable) {
       return NextResponse.json(
@@ -117,6 +123,10 @@ export async function POST(request: NextRequest) {
           ? [...new Set(parsedBody.planning_areas.map((item) => item.trim()).filter(Boolean))]
           : undefined,
     };
+
+    const workerLimit = pLimit(
+      selectedModelOption.provider === "anthropic" ? 3 : 6,
+    );
 
     const candidates = filterPersonas(store.personas, filters);
     const sampled = sampleFromCandidates(
@@ -195,10 +205,12 @@ export async function POST(request: NextRequest) {
     const reasonCounts = summarizeFailureReasons(failureReasons);
 
     const failures = replies.length - responses.length;
-    if (responses.length < 5) {
+    const minRequired = minimumRequiredResponses(sampled.length);
+    if (responses.length < minRequired) {
       console.error("[/api/ask] insufficient model responses", {
         request_id: requestId,
         model,
+        min_required: minRequired,
         failed_calls: failures,
         successful_calls: responses.length,
         reason_counts: reasonCounts,
@@ -213,8 +225,10 @@ export async function POST(request: NextRequest) {
           model,
           sample_size: sampled.length,
           total_matches: candidates.length,
+          min_required: minRequired,
           failed_calls: failures,
           successful_calls: responses.length,
+          reason_counts: reasonCounts,
           debug:
             isDebugEnabled()
               ? {
@@ -245,6 +259,23 @@ export async function POST(request: NextRequest) {
           ? [`${failures} persona responses failed and were skipped.`]
           : [],
     });
+
+    try {
+      await persistAskResult(payload, requestId);
+    } catch (persistError) {
+      const persistMessage =
+        persistError instanceof Error
+          ? persistError.message
+          : "Unknown persistence error.";
+      console.error("[/api/ask] failed to persist result", {
+        request_id: requestId,
+        error: persistMessage,
+      });
+      return NextResponse.json(
+        { error: "Failed to persist ask result.", request_id: requestId },
+        { status: 502, headers: { "X-Request-Id": requestId } },
+      );
+    }
 
     return NextResponse.json(payload, {
       status: 200,

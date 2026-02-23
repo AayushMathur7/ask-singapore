@@ -1,5 +1,8 @@
 import { randomUUID } from "node:crypto";
+import type { Doc } from "../../convex/_generated/dataModel";
+import { api } from "../../convex/_generated/api";
 import type { AskResponse, Persona, PersonaResponse } from "@/lib/schemas";
+import { createConvexClient } from "@/lib/convex-client";
 
 export type CohortFilters = {
   age_min: number;
@@ -27,50 +30,63 @@ export type CohortRecord = {
   last_turn: CohortTurn | null;
 };
 
-const MAX_COHORTS = 200;
-const cohorts = new Map<string, CohortRecord>();
-
-function pruneIfNeeded() {
-  if (cohorts.size < MAX_COHORTS) {
-    return;
-  }
-  const oldest = [...cohorts.values()].sort((a, b) =>
-    a.created_at.localeCompare(b.created_at),
-  )[0];
-  if (oldest) {
-    cohorts.delete(oldest.id);
-  }
+function fromConvexCohort(doc: Doc<"cohorts">): CohortRecord {
+  return {
+    id: doc.cohort_id,
+    created_at: doc.created_at,
+    filters: doc.filters as CohortFilters,
+    total_matches: doc.total_matches,
+    personas: doc.personas as Persona[],
+    last_turn: (doc.last_turn as CohortTurn | undefined) ?? null,
+  };
 }
 
-export function createCohort(params: {
+export async function createCohort(params: {
   filters: CohortFilters;
   totalMatches: number;
   personas: Persona[];
-}): CohortRecord {
-  pruneIfNeeded();
-  const record: CohortRecord = {
-    id: randomUUID(),
-    created_at: new Date().toISOString(),
+}): Promise<CohortRecord> {
+  const convex = createConvexClient();
+  const cohortId = randomUUID();
+  const createdAt = new Date().toISOString();
+  const created = await convex.mutation(api.cohorts.create, {
+    cohort_id: cohortId,
+    created_at: createdAt,
     filters: params.filters,
     total_matches: params.totalMatches,
     personas: params.personas,
-    last_turn: null,
-  };
-  cohorts.set(record.id, record);
-  return record;
+    last_turn: undefined,
+  });
+  if (!created) {
+    throw new Error("Failed to create cohort.");
+  }
+  return fromConvexCohort(created);
 }
 
-export function getCohort(id: string): CohortRecord | null {
-  return cohorts.get(id) ?? null;
-}
-
-export function setCohortLastTurn(id: string, turn: CohortTurn): CohortRecord | null {
-  const cohort = cohorts.get(id);
+export async function getCohort(id: string): Promise<CohortRecord | null> {
+  const convex = createConvexClient();
+  const cohort = await convex.query(api.cohorts.getByCohortId, {
+    cohort_id: id,
+  });
   if (!cohort) {
     return null;
   }
-  cohort.last_turn = turn;
-  return cohort;
+  return fromConvexCohort(cohort);
+}
+
+export async function setCohortLastTurn(
+  id: string,
+  turn: CohortTurn,
+): Promise<CohortRecord | null> {
+  const convex = createConvexClient();
+  const updated = await convex.mutation(api.cohorts.setLastTurn, {
+    cohort_id: id,
+    last_turn: turn,
+  });
+  if (!updated) {
+    return null;
+  }
+  return fromConvexCohort(updated);
 }
 
 export function toCohortResponse(cohort: CohortRecord) {

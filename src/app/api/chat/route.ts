@@ -74,7 +74,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const cohort = getCohort(cohortId);
+    const cohort = await getCohort(cohortId);
     if (!cohort) {
       return NextResponse.json(
         { error: "Cohort not found or expired.", request_id: requestId },
@@ -155,7 +155,7 @@ export async function POST(request: Request) {
     }
 
     const aggregated = aggregateSentiment(responses);
-    setCohortLastTurn(cohort.id, {
+    await setCohortLastTurn(cohort.id, {
       question,
       generated_at: new Date().toISOString(),
       summary: aggregated.summary,

@@ -9,7 +9,7 @@ type RouteParams = {
 
 export async function GET(_: Request, context: RouteParams) {
   const { cohortId } = await context.params;
-  const cohort = getCohort(cohortId);
+  const cohort = await getCohort(cohortId);
   if (!cohort) {
     return NextResponse.json(
       { error: "Cohort not found or expired." },
