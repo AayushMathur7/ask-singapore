@@ -1,6 +1,7 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
+import type { ProviderOptions } from "@ai-sdk/provider-utils";
 import { generateObject } from "ai";
 import { getModelOption, type SupportedModelId } from "@/lib/model-catalog";
 import { PersonaReplySchema, type Persona } from "@/lib/schemas";
@@ -89,32 +90,46 @@ export async function generatePersonaReply(params: {
       continue;
     }
 
-    const providerOptions =
-      candidate.provider === "anthropic"
-        ? {
-            anthropic: {
-              structuredOutputMode: "jsonTool" as const,
-              cacheControl: {
-                type: "ephemeral" as const,
-                ttl: "5m" as const,
-              },
-            },
-          }
-        : undefined;
+    let providerOptions: ProviderOptions | undefined;
+    if (candidate.provider === "anthropic") {
+      providerOptions = {
+        anthropic: {
+          structuredOutputMode: "jsonTool" as const,
+          cacheControl: {
+            type: "ephemeral" as const,
+            ttl: "5m" as const,
+          },
+        },
+      };
+    } else if (candidate.provider === "openai") {
+      providerOptions = {
+        openai: {
+          reasoningEffort: "minimal" as const,
+          textVerbosity: "low" as const,
+          strictJsonSchema: false,
+        },
+      };
+    }
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const controller = new AbortController();
       const timeoutMs =
-        candidate.provider === "anthropic" ? 22000 : 10000;
+        candidate.provider === "anthropic"
+          ? 22000
+          : candidate.provider === "openai"
+            ? 26000
+            : 10000;
       const timeout = setTimeout(() => controller.abort(), timeoutMs);
       try {
+        const maxOutputTokens =
+          candidate.provider === "openai" ? 1400 : 220;
         const result = await generateObject({
           model: modelHandle,
           providerOptions,
           schema: PersonaReplySchema,
           prompt: createPrompt(params.question, params.persona, params.areaContext),
           temperature: 0.6,
-          maxOutputTokens: 220,
+          maxOutputTokens,
           abortSignal: controller.signal,
           maxRetries: 0,
         });
@@ -137,7 +152,12 @@ export async function generatePersonaReply(params: {
         );
         lastError = error instanceof Error ? error : new Error("Unknown model provider error.");
         if (attempt < 2) {
-          const delayMs = candidate.provider === "anthropic" ? 900 : 220;
+          const delayMs =
+            candidate.provider === "anthropic"
+              ? 900
+              : candidate.provider === "openai"
+                ? 500
+                : 220;
           await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
       } finally {
