@@ -157,7 +157,7 @@ function MultiSelectFilter(props: {
 
 export function AskSingaporeApp() {
   const [ageMin, setAgeMin] = useState(20);
-  const [ageMax, setAgeMax] = useState(25);
+  const [ageMax, setAgeMax] = useState(60);
   const [sampleSize, setSampleSize] = useState(20);
   const [sex, setSex] = useState("any");
   const [selectedOccupations, setSelectedOccupations] = useState<string[]>([]);

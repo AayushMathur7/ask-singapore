@@ -6,7 +6,7 @@ import { sampleFromCandidates } from "@/lib/sampling";
 
 const CreateCohortSchema = z.object({
   age_min: z.coerce.number().int().min(18).max(120).default(20),
-  age_max: z.coerce.number().int().min(18).max(120).default(25),
+  age_max: z.coerce.number().int().min(18).max(120).default(60),
   sample_size: z.coerce.number().int().min(5).max(30).default(20),
   occupation_query: z.string().trim().max(80).optional().default(""),
   planning_area_query: z.string().trim().max(80).optional().default(""),

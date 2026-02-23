@@ -45,7 +45,7 @@ export const AskRequestSchema = z.object({
     .min(4, "Please enter at least 4 characters.")
     .max(280, "Please keep the question under 280 characters."),
   age_min: z.coerce.number().int().min(18).max(120).default(20),
-  age_max: z.coerce.number().int().min(18).max(120).default(25),
+  age_max: z.coerce.number().int().min(18).max(120).default(60),
   sample_size: z.coerce.number().int().min(5).max(200).default(20),
   sex: z.string().trim().max(20).optional(),
   occupation_query: z.string().trim().max(80).optional(),
