@@ -93,6 +93,7 @@ export async function generatePersonaReply(params: {
       candidate.provider === "anthropic"
         ? {
             anthropic: {
+              structuredOutputMode: "jsonTool" as const,
               cacheControl: {
                 type: "ephemeral" as const,
                 ttl: "5m" as const,
