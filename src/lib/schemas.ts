@@ -58,7 +58,7 @@ export type AskRequest = z.infer<typeof AskRequestSchema>;
 
 export const PersonaReplySchema = z.object({
   answer: z.string().min(5).max(700),
-  reasoning: z.string().max(300).optional().default(""),
+  reasoning: z.string().max(300),
   stance: z.number().int().min(-2).max(2),
   confidence: z.number().min(0).max(1),
 });
